@@ -4,17 +4,16 @@ COPY ./src /opt/gosrc/
 
 WORKDIR /opt/gosrc/
 
-RUN groupadd -r gorunner && useradd --no-log-init -r -g gorunner gorunner
+RUN go get -d -v
 
-RUN go build -o simpleapp . && \
-    chown gorunner:gorunner simpleapp && \
-    chmod +x simpleapp
+# Statically compile, to run on Scratch
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -ldflags="-w -s" -o simpleapp
 
-USER gorunner
+### BUILD APP IMAGE
+FROM scratch
 
-CMD [ "./simpleapp" ]
-
-#FROM nginx:alpine
+COPY --from=BUILDER /opt/gosrc/simpleapp /go/bin/
+WORKDIR /go/bin/
 
 #RUN groupadd -r gorunner && useradd --no-log-init -r -g gorunner gorunner
 #RUN chown gorunner:gorunner simpleapp && \
@@ -22,3 +21,6 @@ CMD [ "./simpleapp" ]
 #
 #USER gorunner
 
+USER 9876
+
+CMD [ "./simpleapp" ]
