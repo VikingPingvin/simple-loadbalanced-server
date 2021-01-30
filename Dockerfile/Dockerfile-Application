@@ -1,0 +1,24 @@
+FROM golang:1.15.5 AS BUILDER
+
+COPY ./src /opt/gosrc/
+
+WORKDIR /opt/gosrc/
+
+RUN groupadd -r gorunner && useradd --no-log-init -r -g gorunner gorunner
+
+RUN go build -o simpleapp . && \
+    chown gorunner:gorunner simpleapp && \
+    chmod +x simpleapp
+
+USER gorunner
+
+CMD [ "./simpleapp" ]
+
+#FROM nginx:alpine
+
+#RUN groupadd -r gorunner && useradd --no-log-init -r -g gorunner gorunner
+#RUN chown gorunner:gorunner simpleapp && \
+#    chmod +x simpleapp
+#
+#USER gorunner
+
